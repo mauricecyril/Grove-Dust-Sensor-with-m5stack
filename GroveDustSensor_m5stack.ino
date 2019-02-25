@@ -38,7 +38,7 @@ void setup()
 
     // Set the Font for the readings
     M5.Lcd.setFreeFont(FSSB24);       // Select Free Sans Serif Bold 24 point font
-    M5.Lcd.println();                // Move cursor down a line
+    M5.Lcd.println((String)"Reading");                // Move cursor down a line
     
     // Display Zero Reading on Serial
     Serial.println((String)"L: "+lowpulseoccupancy+" R: "+ratio+" C: "+concentration+" ");
@@ -83,12 +83,56 @@ void loop()
         M5.Lcd.setTextColor(TFT_WHITE);
         M5.Lcd.setCursor(xpos, ypos);    // Set cursor near top left corner of screen
 
-
         // Set the Font for the readings
         M5.Lcd.setFreeFont(FSSB24);       // Select Free Sans Serif Bold 24 point font
 
+
+        // Change Text colour and First Line based on Concentration Values
+        // High Dust Concentration Over 20K
+        if (concentration >= 18000)
+        {
+            // Set Colour to RED
+            M5.Lcd.setTextColor(TFT_RED);
+            M5.Lcd.println((String)"Danger");  // Display Summary
+        }
+
+
+        else if (concentration >= 10000 && concentration < 18000)
+        {
+            // Set Colour to ORANGE
+            M5.Lcd.setTextColor(TFT_ORANGE);
+            M5.Lcd.println((String)"Bad Quality");  // Display Summary
+
+        }
+
+        else if (concentration >= 5000 && concentration < 10000)
+        {
+            // Set Colour to YELLOW
+            M5.Lcd.setTextColor(TFT_YELLOW);
+            M5.Lcd.println((String)"Med Quality");  // Display Summary
+
+        }
+
+
+        else if (concentration >= 2000 && concentration < 5000)
+        {
+            // Set Colour to GREEN
+            M5.Lcd.setTextColor(TFT_GREEN);
+            M5.Lcd.println((String)"Avg Quality");  // Display Summary
+            
+        }
+
+        else
+        {
+            // Set Colour to WHITE
+            M5.Lcd.setTextColor(TFT_WHITE);
+            M5.Lcd.println((String)"Good Quality");  // Display Summary
+
+        }
+        
+
+
         // Print the readings on the M5Stack TFT
-        M5.Lcd.println();                // Move cursor down a line
         M5.Lcd.println((String)"L: "+lowpulseoccupancy+" ");
         M5.Lcd.println((String)"R: "+ratio+" ");
         M5.Lcd.println((String)"C: "+concentration+" ");        
