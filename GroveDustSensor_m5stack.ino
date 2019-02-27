@@ -1,6 +1,9 @@
 #include <M5Stack.h>
 #include "Free_Fonts.h" // Include the header file attached to this sketch
+#include "config.h". // Adafruit IO credentials
 
+
+// Setup Variables for m5stack display
 unsigned long drawTime = 0;
 
 // Setup the Grove DustSensor
@@ -11,6 +14,12 @@ unsigned long sampletime_ms = 30000;//sampe 30s ;
 unsigned long lowpulseoccupancy = 0;
 float ratio = 0;
 float concentration = 0;
+
+
+// Setup the feed for the Gove Dust Sensor
+AdafruitIO_Feed *concentrationFeed = io.feed("concentration");
+
+
 
 void setup() 
 {
@@ -24,6 +33,22 @@ void setup()
     Serial.begin(9600);
     pinMode(pin,INPUT);
     starttime = millis();//get the current time;
+  
+    // connect to io.adafruit.com
+    Serial.print("Connecting to Adafruit IO");
+    io.connect();
+
+    // wait for a connection
+    while (io.status() < AIO_CONNECTED)
+    {
+      Serial.print(".");
+      delay(500);
+    }
+
+    // we are connected to Adafruit IO
+    Serial.println();
+    Serial.println(io.statusText());
+  
 
     // Setup Free Fonts
     // Setup Initial Position
@@ -53,6 +78,10 @@ void setup()
 
 void loop() 
 {
+    // Run Adafruit IO
+    io.run();
+  
+    // Start Reading from Grove Dust Sensor
     duration = pulseIn(pin, LOW);
     lowpulseoccupancy = lowpulseoccupancy+duration;
     
@@ -137,6 +166,9 @@ void loop()
         M5.Lcd.println((String)"R: "+ratio+" ");
         M5.Lcd.println((String)"C: "+concentration+" ");        
     
+        // send data to Adafruit IO feeds
+        concentrationFeed->save(concentration);
+      
         delay(5000);
         
         lowpulseoccupancy = 0;
