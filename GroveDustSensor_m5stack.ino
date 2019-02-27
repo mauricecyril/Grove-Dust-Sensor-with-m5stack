@@ -1,6 +1,39 @@
+//#include <AdafruitIO_MQTT.h>
+//#include <AdafruitIO_Ethernet.h>
+//#include <AdafruitIO_FONA.h>
+//#include <AdafruitIO_Definitions.h>
+//#include <AdafruitIO_Time.h>
+//#include <AdafruitIO_Group.h>
+//#include <AdafruitIO_Data.h>
+//#include <AdafruitIO_Dashboard.h>
+
+#include <AdafruitIO.h>
+#include <AdafruitIO_WiFi.h>
+#include <AdafruitIO_Feed.h>
 #include <M5Stack.h>
 #include "Free_Fonts.h" // Include the header file attached to this sketch
-#include "config.h". // Adafruit IO credentials
+
+// Setup Adafruit IO Credentials
+/************************ Adafruit IO Config *******************************/
+// visit io.adafruit.com if you need to create an account,
+// or if you need your Adafruit IO key.
+//#define IO_USERNAME    "your_username"
+//#define IO_KEY         "your_AIO_key"
+
+/******************************* WIFI **************************************/
+// Setup Wifi Credentials
+//#define WIFI_SSID       "your_ssid"
+//#define WIFI_PASS       "your_pass"
+
+
+// Setup Adafruit IO Wifi Settings
+AdafruitIO_WiFi io(IO_USERNAME, IO_KEY, WIFI_SSID, WIFI_PASS);
+
+/***************************** IO FEED ************************************/
+// Setup the Adafruit IO feed for the Gove Dust Sensor
+// Input your feed key in between the " " (Quotation Marks)
+// 
+AdafruitIO_Feed *concentrationFeed = io.feed("env-ardconc");
 
 
 // Setup Variables for m5stack display
@@ -16,39 +49,62 @@ float ratio = 0;
 float concentration = 0;
 
 
-// Setup the feed for the Gove Dust Sensor
-AdafruitIO_Feed *concentrationFeed = io.feed("concentration");
-
 
 
 void setup() 
 {
-  M5.begin();
-  //disable the speaker noise
-  dacWrite(25, 0);
-  Serial.println((String)"Starting Sensor");
-  M5.Lcd.println((String)"Starting Sensor");
-   
+    M5.begin();
+    
+    // Disable the speaker noise
+    dacWrite(25, 0);
+
+    // Display Start Message
+    Serial.println((String)"Starting Sensor");
+    M5.Lcd.println((String)"Starting Sensor");
+
+
+     
     // Set Up Serial and Pin Mode for Dust Sensor
     Serial.begin(9600);
     pinMode(pin,INPUT);
     starttime = millis();//get the current time;
   
-    // connect to io.adafruit.com
+    // Connect to io.adafruit.com
     Serial.print("Connecting to Adafruit IO");
+    M5.Lcd.println("Connecting to Adafruit IO");
     io.connect();
 
-    // wait for a connection
+    // Wait for a connection
     while (io.status() < AIO_CONNECTED)
     {
       Serial.print(".");
-      delay(500);
+      M5.Lcd.print(".");
+      
+      // Button preses not working.
+      if(M5.BtnA.wasPressed()) {
+        M5.Lcd.print("A");
+        Serial.print("A");
+      }
+      if(M5.BtnB.wasPressed()) {
+        M5.Lcd.print("B");
+        Serial.print("B");
+       } 
+      if(M5.BtnC.wasPressed()) {
+        M5.Lcd.print("C");
+        Serial.print("C");
+       } 
+      
+      delay(2500);
     }
 
     // we are connected to Adafruit IO
     Serial.println();
     Serial.println(io.statusText());
-  
+    M5.Lcd.println(io.statusText());
+
+    // (Optional) Send Default Value of 10
+    //io.run();
+    //concentrationFeed->save(10);
 
     // Setup Free Fonts
     // Setup Initial Position
@@ -80,7 +136,7 @@ void loop()
 {
     // Run Adafruit IO
     io.run();
-  
+
     // Start Reading from Grove Dust Sensor
     duration = pulseIn(pin, LOW);
     lowpulseoccupancy = lowpulseoccupancy+duration;
@@ -165,10 +221,14 @@ void loop()
         M5.Lcd.println((String)"L: "+lowpulseoccupancy+" ");
         M5.Lcd.println((String)"R: "+ratio+" ");
         M5.Lcd.println((String)"C: "+concentration+" ");        
-    
+
         // send data to Adafruit IO feeds
         concentrationFeed->save(concentration);
-      
+
+        // Confirm Post on serial
+        Serial.println((String)"Sent: "+concentration);
+
+        
         delay(5000);
         
         lowpulseoccupancy = 0;
